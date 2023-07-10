@@ -1,0 +1,48 @@
+{
+  "name": "washer-records",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "dev:https": "HTTPS=true vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ivanwei/washer-records.git"
+  },
+  "author": "Wei Hong-Lin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ivanwei/washer-records/issues"
+  },
+  "homepage": "https://github.com/ivanwei/washer-records#readme",
+  "dependencies": {
+    "@botui/react": "^1.1.5",
+    "@line/liff": "2.22.2",
+    "botui": "^1.1.3",
+    "ky": "^0.33.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.6",
+    "@typescript-eslint/eslint-plugin": "^5.61.0",
+    "@typescript-eslint/parser": "^5.61.0",
+    "@vitejs/plugin-react": "^4.0.2",
+    "devcert": "1.2.2",
+    "eslint": "^8.44.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^2.8.8",
+    "sass": "^1.63.6",
+    "typescript": "^5.1.6",
+    "vite": "^4.4.2"
+  }
+}
