@@ -8,6 +8,12 @@ import ky from 'ky';
 import { createBot } from 'botui';
 import '../node_modules/@botui/react/dist/styles/default.theme.scss';
 
+interface INFOS_TYPES {
+  washers: { label: string; value: string }[];
+  types: { label: string; value: string }[];
+  who: { label: string; value: string }[];
+}
+
 const API_URL: string = import.meta.env.VITE_API_URL as string;
 const RECORDS_PATH: string = import.meta.env.VITE_RECORDS_PATH as string;
 const myBot = createBot();
@@ -20,15 +26,11 @@ const DEFAULT_LOGGING = {
   tip: '',
 };
 const newLogging = { ...DEFAULT_LOGGING };
-let infos: {
-  washers: { label: string; value: string }[];
-  types: { label: string; value: string }[];
-  who: { label: string; value: string }[];
-};
+let infos: INFOS_TYPES;
 
 const App = () => {
   if (!liff.isLoggedIn()) {
-    console.log('aaa::');
+    // alert()
     // liff.login({ redirectUri: "https://blog.ivanwei.co" });
   }
 
@@ -48,7 +50,7 @@ const App = () => {
           { actionType: 'selectButtons' },
         ),
       )
-      .then((data: { selected: number }) => {
+      .then((data: { selected: { value: number } }) => {
         switch (data.selected.value) {
           case 1:
             return myBot.message
@@ -56,8 +58,9 @@ const App = () => {
               .then(() => {
                 ky.get(`${API_URL}?type=types`)
                   .json()
-                  .then(({ data }: { data: void }) => {
-                    infos = data;
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  .then(({ data }: any) => {
+                    infos = data as INFOS_TYPES;
                     myBot.next();
                   })
                   .catch(() => false);
@@ -88,7 +91,7 @@ const App = () => {
                   { actionType: 'selectButtons' },
                 ),
               )
-              .then((data: { selected: { value: string } }) => {
+              .then((data: { selected: { value: number } }) => {
                 newLogging.who = data.selected.value;
 
                 return myBot.message.add({ text: '此次洗滌類別是？' });
@@ -208,10 +211,11 @@ const App = () => {
         ),
       )
       .then((data: { selected: { value: boolean } }) => {
-        if (data.selected.value) {
-          return location.reload();
+        if (!data.selected.value) {
+          return myBot.message.add({ text: '謝謝使用 😊' });
         }
-        return myBot.message.add({ text: '謝謝使用 😊' });
+
+        location.reload();
       })
       .catch(() => false);
   }, []);
