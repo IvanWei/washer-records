@@ -8,8 +8,8 @@ import ky from 'ky';
 import { createBot } from 'botui';
 import '../node_modules/@botui/react/dist/styles/default.theme.scss';
 
-const API_URL: string = import.meta.env.VITE_API_URL;
-const RECORDS_PATH: string = import.meta.env.VITE_RECORDS_PATH;
+const API_URL: string = import.meta.env.VITE_API_URL as string;
+const RECORDS_PATH: string = import.meta.env.VITE_RECORDS_PATH as string;
 const myBot = createBot();
 const DEFAULT_LOGGING = {
   washer: '',
@@ -20,7 +20,11 @@ const DEFAULT_LOGGING = {
   tip: '',
 };
 const newLogging = { ...DEFAULT_LOGGING };
-let infos = null;
+let infos: {
+  washers: { label: string; value: string }[];
+  types: { label: string; value: string }[];
+  who: { label: string; value: string }[];
+};
 
 const App = () => {
   if (!liff.isLoggedIn()) {
@@ -44,7 +48,7 @@ const App = () => {
           { actionType: 'selectButtons' },
         ),
       )
-      .then((data) => {
+      .then((data: { selected: number }) => {
         switch (data.selected.value) {
           case 1:
             return myBot.message
@@ -52,7 +56,7 @@ const App = () => {
               .then(() => {
                 ky.get(`${API_URL}?type=types`)
                   .json()
-                  .then(({ data }) => {
+                  .then(({ data }: { data: void }) => {
                     infos = data;
                     myBot.next();
                   })
@@ -63,7 +67,7 @@ const App = () => {
               .then(() =>
                 myBot.action.set(
                   {
-                    options: infos.washers.map((washer) => ({
+                    options: infos.washers.map((washer): { label: string; value: string } => ({
                       label: washer.label,
                       value: washer.value,
                     })),
@@ -71,8 +75,7 @@ const App = () => {
                   { actionType: 'selectButtons' },
                 ),
               )
-              .then((data) => {
-                // setNewLogging((contents) => ({...contents, washer: data.selected.value}));
+              .then((data: { selected: { value: string } }) => {
                 newLogging.washer = data.selected.value;
 
                 return myBot.message.add({ text: '此次使用者是？' });
@@ -85,8 +88,7 @@ const App = () => {
                   { actionType: 'selectButtons' },
                 ),
               )
-              .then((data) => {
-                // setNewLogging((contents) => ({...contents, who: data.selected.value}));
+              .then((data: { selected: { value: string } }) => {
                 newLogging.who = data.selected.value;
 
                 return myBot.message.add({ text: '此次洗滌類別是？' });
@@ -99,8 +101,7 @@ const App = () => {
                   { actionType: 'selectButtons' },
                 ),
               )
-              .then((data) => {
-                // setNewLogging((contents) => ({...contents, type: data.selected.value}));
+              .then((data: { selected: { value: string } }) => {
                 newLogging.washingType = data.selected.value;
 
                 if (data.selected.value === 'other') {
@@ -112,9 +113,8 @@ const App = () => {
 
                 return myBot.wait({ waitTime: 500 });
               })
-              .then((data) => {
+              .then((data: { value: string }) => {
                 if (typeof data === 'object') {
-                  // setNewLogging((contents) => ({...contents, typeMsg: data.value}));
                   newLogging.typeMsg = data.value;
                 }
 
@@ -131,19 +131,19 @@ const App = () => {
                   { actionType: 'selectButtons' },
                 ),
               )
-              .then((data) => {
-                // setNewLogging((contents) => ({...contents, isDirty: data.selected.value}));
+              .then((data: { selected: { value: boolean } }) => {
                 newLogging.isDirty = data.selected.value;
-                console.log('newLogging:: ', newLogging);
 
                 ky.post(API_URL, {
-                  // method: 'post',
                   headers: { 'Content-Type': 'text/plain' },
                   json: { ...newLogging, type: 'log' },
                 })
                   .json()
                   .then(() => {
                     myBot.next();
+                  })
+                  .catch((e) => {
+                    throw e;
                   });
 
                 return myBot.wait();
@@ -207,7 +207,7 @@ const App = () => {
           { actionType: 'selectButtons' },
         ),
       )
-      .then((data) => {
+      .then((data: { selected: { value: boolean } }) => {
         if (data.selected.value) {
           return location.reload();
         }
