@@ -16,6 +16,7 @@ interface INFOS_TYPES {
 
 const API_URL: string = import.meta.env.VITE_API_URL as string;
 const RECORDS_PATH: string = import.meta.env.VITE_RECORDS_PATH as string;
+const LIFF_REDIRECT_URI: string = import.meta.env.VITE_LIFF_REDIRECT_URI as string;
 const myBot = createBot();
 const DEFAULT_LOGGING = {
   washer: '',
@@ -30,8 +31,8 @@ let infos: INFOS_TYPES;
 
 const App = () => {
   if (!liff.isLoggedIn()) {
-    // alert()
-    // liff.login({ redirectUri: "https://blog.ivanwei.co" });
+    alert('使用此服務需登入 LINE');
+    liff.login({ redirectUri: LIFF_REDIRECT_URI });
   }
 
   useEffect(() => {
