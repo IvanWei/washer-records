@@ -51,7 +51,9 @@ const App = () => {
               .json();
 
             if (isEnabled) {
-              myBot.next();
+              setTimeout(() => {
+                myBot.next();
+              }, 0);
             } else {
               ky.post(API_URL, {
                 headers: { 'Content-Type': 'text/plain' },
@@ -69,13 +71,11 @@ const App = () => {
                   throw e;
                 });
             }
-
-            return myBot.wait();
           } catch (e) {
             alert('#2 權限尚未開通，請與管理者聯繫');
-
-            return myBot.wait();
           }
+
+          return myBot.wait();
         })
         .then(() => myBot.message.add({ text: '此次使用哪個服務？' }))
         .then(() =>
@@ -196,8 +196,6 @@ const App = () => {
                 })
                 .then(() => myBot.message.add({ text: '記錄已存入 Google sheet' }))
                 .then(() => {
-                  console.log('newLoggingaa:: ', JSON.stringify(newLogging));
-
                   return myBot.message.add(
                     {
                       links: [
