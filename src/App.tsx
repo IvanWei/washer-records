@@ -36,189 +36,212 @@ const App = () => {
   }
 
   useEffect(() => {
-    myBot.message
-      .add({ text: '我是洗衣機記錄 對話機器人' })
-      .then(() => myBot.message.add({ text: '此次使用哪個服務？' }))
-      .then(() =>
-        myBot.action.set(
-          {
-            options: [
-              { label: '新增洗滌記錄', value: 1 },
-              { label: '查看洗滌記錄', value: 2 },
-              { label: '加入通知', value: 3 },
-            ],
-          },
-          { actionType: 'selectButtons' },
-        ),
-      )
-      .then((data: { selected: { value: number } }) => {
-        switch (data.selected.value) {
-          case 1:
-            return myBot.message
-              .add({ text: '此次使用哪一臺洗衣機？' })
-              .then(() => {
-                ky.get(`${API_URL}?type=types`)
-                  .json()
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  .then(({ data }: any) => {
-                    infos = data as INFOS_TYPES;
+    if (!liff.isLoggedIn()) {
+      myBot.message
+        .add({ text: '我是洗衣機記錄 對話機器人' })
+        .then(() => myBot.message.add({ text: '檢查是否有使用權限，請稍後...' }))
+        .then(() => {
+          liff.getProfile()
+            .then((profile) => {
+              ky.get(`${API_URL}?type=permissions&userId=${profile.userId}&displayName=${profile.displayName}`)
+                .json()
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .then(({ data }: any) => {
+                  if (data === true) {
                     myBot.next();
-                  })
-                  .catch(() => false);
 
-                return myBot.wait();
-              })
-              .then(() =>
-                myBot.action.set(
-                  {
-                    options: infos.washers.map((washer): { label: string; value: string } => ({
-                      label: washer.label,
-                      value: washer.value,
-                    })),
-                  },
-                  { actionType: 'selectButtons' },
-                ),
-              )
-              .then((data: { selected: { value: string } }) => {
-                newLogging.washer = data.selected.value;
-
-                return myBot.message.add({ text: '此次使用者是？' });
-              })
-              .then(() =>
-                myBot.action.set(
-                  {
-                    options: infos.who.map((who) => ({ label: who.label, value: who.value })),
-                  },
-                  { actionType: 'selectButtons' },
-                ),
-              )
-              .then((data: { selected: { value: number } }) => {
-                newLogging.who = data.selected.value;
-
-                return myBot.message.add({ text: '此次洗滌類別是？' });
-              })
-              .then(() =>
-                myBot.action.set(
-                  {
-                    options: infos.types.map((type) => ({ label: type.label, value: type.value })),
-                  },
-                  { actionType: 'selectButtons' },
-                ),
-              )
-              .then((data: { selected: { value: string } }) => {
-                newLogging.washingType = data.selected.value;
-
-                if (data.selected.value === 'other') {
-                  return myBot.action.set(
-                    { type: 'text', placeholder: '輸入內容', required: true },
-                    { actionType: 'input' },
-                  );
-                }
-
-                return myBot.wait({ waitTime: 500 });
-              })
-              .then((data: { value: string }) => {
-                if (typeof data === 'object') {
-                  newLogging.typeMsg = data.value;
-                }
-
-                return myBot.message.add({ text: '此次屬於嚴重髒污？' });
-              })
-              .then(() =>
-                myBot.action.set(
-                  {
-                    options: [
-                      { label: '是', value: true },
-                      { label: '否', value: false },
-                    ],
-                  },
-                  { actionType: 'selectButtons' },
-                ),
-              )
-              .then((data: { selected: { value: boolean } }) => {
-                newLogging.isDirty = data.selected.value;
-
-                ky.post(API_URL, {
-                  headers: { 'Content-Type': 'text/plain' },
-                  json: { ...newLogging, type: 'log' },
+                  } else {
+                    alert('權限尚未開通，請與管理者聯繫');
+                  }
                 })
-                  .json()
-                  .then(() => {
-                    myBot.next();
+            });
+
+          return myBot.wait();
+        })
+        .then(() => myBot.message.add({ text: '此次使用哪個服務？' }))
+        .then(() =>
+          myBot.action.set(
+            {
+              options: [
+                { label: '新增洗滌記錄', value: 1 },
+                { label: '查看洗滌記錄', value: 2 },
+                { label: '加入通知', value: 3 },
+              ],
+            },
+            { actionType: 'selectButtons' },
+          ),
+        )
+        .then((data: { selected: { value: number } }) => {
+          switch (data.selected.value) {
+            case 1:
+              return myBot.message
+                .add({ text: '此次使用哪一臺洗衣機？' })
+                .then(() => {
+                  ky.get(`${API_URL}?type=types`)
+                    .json()
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    .then(({ data }: any) => {
+                      infos = data as INFOS_TYPES;
+                      myBot.next();
+                    })
+                    .catch(() => false);
+
+                  return myBot.wait();
+                })
+                .then(() =>
+                  myBot.action.set(
+                    {
+                      options: infos.washers.map((washer): { label: string; value: string } => ({
+                        label: washer.label,
+                        value: washer.value,
+                      })),
+                    },
+                    { actionType: 'selectButtons' },
+                  ),
+                )
+                .then((data: { selected: { value: string } }) => {
+                  newLogging.washer = data.selected.value;
+
+                  return myBot.message.add({ text: '此次使用者是？' });
+                })
+                .then(() =>
+                  myBot.action.set(
+                    {
+                      options: infos.who.map((who) => ({ label: who.label, value: who.value })),
+                    },
+                    { actionType: 'selectButtons' },
+                  ),
+                )
+                .then((data: { selected: { value: number } }) => {
+                  newLogging.who = data.selected.value;
+
+                  return myBot.message.add({ text: '此次洗滌類別是？' });
+                })
+                .then(() =>
+                  myBot.action.set(
+                    {
+                      options: infos.types.map((type) => ({ label: type.label, value: type.value })),
+                    },
+                    { actionType: 'selectButtons' },
+                  ),
+                )
+                .then((data: { selected: { value: string } }) => {
+                  newLogging.washingType = data.selected.value;
+
+                  if (data.selected.value === 'other') {
+                    return myBot.action.set(
+                      { type: 'text', placeholder: '輸入內容', required: true },
+                      { actionType: 'input' },
+                    );
+                  }
+
+                  return myBot.wait({ waitTime: 500 });
+                })
+                .then((data: { value: string }) => {
+                  if (typeof data === 'object') {
+                    newLogging.typeMsg = data.value;
+                  }
+
+                  return myBot.message.add({ text: '此次屬於嚴重髒污？' });
+                })
+                .then(() =>
+                  myBot.action.set(
+                    {
+                      options: [
+                        { label: '是', value: true },
+                        { label: '否', value: false },
+                      ],
+                    },
+                    { actionType: 'selectButtons' },
+                  ),
+                )
+                .then((data: { selected: { value: boolean } }) => {
+                  newLogging.isDirty = data.selected.value;
+
+                  ky.post(API_URL, {
+                    headers: { 'Content-Type': 'text/plain' },
+                    json: { ...newLogging, type: 'log' },
                   })
-                  .catch((e) => {
-                    throw e;
-                  });
+                    .json()
+                    .then(() => {
+                      myBot.next();
+                    })
+                    .catch((e) => {
+                      throw e;
+                    });
 
-                return myBot.wait();
-              })
-              .then(() => myBot.message.add({ text: '記錄已存入 Google sheet' }))
-              .then(() => {
-                console.log('newLoggingaa:: ', JSON.stringify(newLogging));
+                  return myBot.wait();
+                })
+                .then(() => myBot.message.add({ text: '記錄已存入 Google sheet' }))
+                .then(() => {
+                  console.log('newLoggingaa:: ', JSON.stringify(newLogging));
 
-                return myBot.message.add(
-                  {
-                    links: [
-                      {
-                        text: '點擊我可以查看記錄',
-                        href: RECORDS_PATH,
-                        target: '_blank',
-                      },
-                    ],
-                  },
-                  { messageType: 'links' },
-                );
-              });
-          case 2:
-            return myBot.message.add(
-              {
-                links: [
-                  {
-                    text: '點擊我可以查看記錄',
-                    href: RECORDS_PATH,
-                    target: '_blank',
-                  },
-                ],
-              },
-              { messageType: 'links' },
-            );
-          case 3:
-            return myBot.message.add({ text: '尚未開放' });
-          // return myBot.message.add(
-          //   {
-          //     links: [
-          //       {
-          //         text: '點擊我',
-          //         href: '',
-          //         target: '_blank',
-          //       },
-          //     ],
-          //   },
-          //   { messageType: 'links' },
-          // );
-        }
-      })
-      .then(() => myBot.wait({ waitTime: 3000 }))
-      .then(() => myBot.message.add({ text: '是否要再新增使用記錄？' }))
-      .then(() =>
-        myBot.action.set(
-          {
-            options: [
-              { label: '是', value: true },
-              { label: '否', value: false },
-            ],
-          },
-          { actionType: 'selectButtons' },
-        ),
-      )
-      .then((data: { selected: { value: boolean } }) => {
-        if (!data.selected.value) {
-          return myBot.message.add({ text: '謝謝使用 😊' });
-        }
+                  return myBot.message.add(
+                    {
+                      links: [
+                        {
+                          text: '點擊我可以查看記錄',
+                          href: RECORDS_PATH,
+                          target: '_blank',
+                        },
+                      ],
+                    },
+                    { messageType: 'links' },
+                  );
+                });
+            case 2:
+              return myBot.message.add(
+                {
+                  links: [
+                    {
+                      text: '點擊我可以查看記錄',
+                      href: RECORDS_PATH,
+                      target: '_blank',
+                    },
+                  ],
+                },
+                { messageType: 'links' },
+              );
+            case 3:
+              return myBot.message.add({ text: '尚未開放' });
+            // return myBot.message.add(
+            //   {
+            //     links: [
+            //       {
+            //         text: '點擊我',
+            //         href: '',
+            //         target: '_blank',
+            //       },
+            //     ],
+            //   },
+            //   { messageType: 'links' },
+            // );
+          }
+        })
+        .then(() => myBot.wait({ waitTime: 3000 }))
+        .then(() => myBot.message.add({ text: '是否要再新增使用記錄？' }))
+        .then(() =>
+          myBot.action.set(
+            {
+              options: [
+                { label: '是', value: true },
+                { label: '否', value: false },
+              ],
+            },
+            { actionType: 'selectButtons' },
+          ),
+        )
+        .then((data: { selected: { value: boolean } }) => {
+          if (!data.selected.value) {
+            return myBot.message.add({ text: '謝謝使用 😊' });
+          }
 
-        location.reload();
-      })
-      .catch(() => false);
+          location.reload();
+        })
+        .catch(() => {
+          alert('bbb::')
+        });
+    }
   }, []);
 
   return (
