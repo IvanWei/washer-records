@@ -40,23 +40,34 @@ const App = () => {
       myBot.message
         .add({ text: '我是洗衣機記錄 對話機器人' })
         .then(() => myBot.message.add({ text: '檢查是否有使用權限，請稍後...' }))
-        .then(() => {
-          liff.getProfile()
-            .then((profile) => {
-              ky.get(`${API_URL}?type=permissions&userId=${profile.userId}&displayName=${profile.displayName}`)
+        .then(async () => {
+          try {
+            const profile = await liff.getProfile();
+            const {data: isEnabled} = await ky.get(`${API_URL}?type=permissions&userId=${profile.userId}&displayName=${profile.displayName}`).json();
+
+            if (isEnabled) {
+              myBot.next();
+
+            } else {
+              ky.post(API_URL, {
+                headers: { 'Content-Type': 'text/plain' },
+                json: { userId: profile.userId, displayName: profile.displayName, type: 'permissions' },
+              })
                 .json()
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .then(({ data }: any) => {
-                  if (data === true) {
-                    myBot.next();
-
-                  } else {
-                    alert('權限尚未開通，請與管理者聯繫');
-                  }
+                .then(() => {
+                  alert('#1 權限尚未開通，請與管理者聯繫');
                 })
-            });
+                .catch((e) => {
+                  throw e;
+                });
+            }
 
-          return myBot.wait();
+            return myBot.wait();
+
+          } catch() {
+            alert('#2 權限尚未開通，請與管理者聯繫');
+          }
+
         })
         .then(() => myBot.message.add({ text: '此次使用哪個服務？' }))
         .then(() =>
