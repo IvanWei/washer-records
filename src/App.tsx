@@ -73,6 +73,8 @@ const App = () => {
             return myBot.wait();
           } catch (e) {
             alert('#2 權限尚未開通，請與管理者聯繫');
+
+            return myBot.wait();
           }
         })
         .then(() => myBot.message.add({ text: '此次使用哪個服務？' }))
