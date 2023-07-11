@@ -43,15 +43,23 @@ const App = () => {
         .then(async () => {
           try {
             const profile = await liff.getProfile();
-            const {data: isEnabled} = await ky.get(`${API_URL}?type=permissions&userId=${profile.userId}&displayName=${profile.displayName}`).json();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: isEnabled }: any = await ky
+              .get(
+                `${API_URL}?type=permissions&userId=${profile.userId}&displayName=${profile.displayName}`,
+              )
+              .json();
 
             if (isEnabled) {
               myBot.next();
-
             } else {
               ky.post(API_URL, {
                 headers: { 'Content-Type': 'text/plain' },
-                json: { userId: profile.userId, displayName: profile.displayName, type: 'permissions' },
+                json: {
+                  userId: profile.userId,
+                  displayName: profile.displayName,
+                  type: 'permissions',
+                },
               })
                 .json()
                 .then(() => {
@@ -63,11 +71,9 @@ const App = () => {
             }
 
             return myBot.wait();
-
-          } catch() {
+          } catch (e) {
             alert('#2 權限尚未開通，請與管理者聯繫');
           }
-
         })
         .then(() => myBot.message.add({ text: '此次使用哪個服務？' }))
         .then(() =>
@@ -131,7 +137,10 @@ const App = () => {
                 .then(() =>
                   myBot.action.set(
                     {
-                      options: infos.types.map((type) => ({ label: type.label, value: type.value })),
+                      options: infos.types.map((type) => ({
+                        label: type.label,
+                        value: type.value,
+                      })),
                     },
                     { actionType: 'selectButtons' },
                   ),
@@ -250,7 +259,7 @@ const App = () => {
           location.reload();
         })
         .catch(() => {
-          alert('bbb::')
+          alert('bbb::');
         });
     }
   }, []);
