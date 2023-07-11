@@ -36,7 +36,7 @@ const App = () => {
   }
 
   useEffect(() => {
-    if (!liff.isLoggedIn()) {
+    if (liff.isLoggedIn()) {
       myBot.message
         .add({ text: '我是洗衣機記錄 對話機器人' })
         .then(() => myBot.message.add({ text: '檢查是否有使用權限，請稍後...' }))
