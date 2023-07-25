@@ -1,5 +1,4 @@
 import ky from 'ky';
-import type { KyResponse } from 'ky';
 import { BotuiInterface } from 'botui';
 
 import type { INFOS_TYPES } from '../types/index.d';
@@ -16,7 +15,7 @@ export default (myBot: BotuiInterface, userId: number) => {
     isDirty: false, // 是否為嚴重髒污
     tip: '', // 備註
     helpWho: 0,
-    useDate: undefined, // 使用時間，補記錄時使用
+    useDate: '', // 使用時間，補記錄時使用
   };
   const infos: INFOS_TYPES = {
     washers: [],
@@ -27,11 +26,15 @@ export default (myBot: BotuiInterface, userId: number) => {
   return myBot.message
     .add({ text: '此次使用哪一臺洗衣機？' })
     .then(() => {
-      ky.get<KyResponse>(`${API_URL}?type=types`)
+      ky.get(`${API_URL}?type=types`)
         .json()
-        .then(({ data }: { data: INFOS_TYPES }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .then(({ data }: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
           infos.washers = data.washers;
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
           infos.types = data.types;
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
           infos.whos = data.whos;
           myBot.next();
         })
@@ -88,7 +91,7 @@ export default (myBot: BotuiInterface, userId: number) => {
                 .then((data: { selected: { value: number } }) => {
                   newLogging.helpWho = data.selected.value;
 
-                  return Promise.resolve();
+                  return myBot.wait({ waitTime: 100 });
                 });
             }
 
@@ -107,7 +110,7 @@ export default (myBot: BotuiInterface, userId: number) => {
               )
               .then((data: { selected: { value: boolean } }) => {
                 if (!data.selected.value) {
-                  return Promise.resolve();
+                  return myBot.wait({ waitTime: 100 });
                 }
 
                 return myBot.message.add({ text: '哪位家人幫忙？' }).then(() =>
@@ -124,7 +127,7 @@ export default (myBot: BotuiInterface, userId: number) => {
                       newLogging.who = data.selected.value;
                       newLogging.helpWho = currentUser.value;
 
-                      return Promise.resolve();
+                      return myBot.wait({ waitTime: 100 });
                     }),
                 );
               });

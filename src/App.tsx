@@ -8,14 +8,14 @@ import ky from 'ky';
 import { createBot } from 'botui';
 import { BotUI, BotUIAction, BotUIMessageList } from '@botui/react';
 
-import type { KyResponse } from 'ky';
-
 import addRecords from './services/addRecords';
 import getUserPermissions from './services/getUserPermissions';
 
+const API_URL: string = import.meta.env.VITE_API_URL;
 const RECORDS_PATH: string = import.meta.env.VITE_RECORDS_PATH;
 const LIFF_REDIRECT_URI: string = import.meta.env.VITE_LIFF_REDIRECT_URI;
 const LINE_NOTIFY_CLIENT_ID: string = import.meta.env.VITE_LINE_NOTIFY_CLIENT_ID;
+
 const myBot = createBot();
 let userId: number;
 let lineNotifyStatus = 'enabled';
@@ -32,15 +32,17 @@ const App = () => {
         .add({ text: '我是洗衣機記錄 對話機器人' })
         .then(() => myBot.message.add({ text: '檢查是否有使用權限，請稍後...' }))
         .then(() => getUserPermissions(myBot))
-        .then((data: { userId: string; enableLineNotify: boolean }) => {
-          userId = data.userId;
-          lineNotifyStatus = enableLineNotify ? 'enabled' : 'disabled';
+        .then((data: { userId: number; enableLineNotify: boolean }) => {
+          if (data) {
+            userId = data.userId;
+            lineNotifyStatus = data.enableLineNotify ? 'enabled' : 'disabled';
+          }
 
           const urlParams = new URLSearchParams(window.location.search);
           const liffClientId = urlParams.get('liffClientId');
           const lineNotifyCode = urlParams.get('code');
           const lineNotifyState = urlParams.get('state');
-          const localLineNotifyState: string = localStorage.getItem('line-notify-state');
+          const localLineNotifyState = String(localStorage.getItem('line-notify-state'));
 
           if (
             !liffClientId &&
@@ -50,60 +52,62 @@ const App = () => {
           ) {
             localStorage.removeItem('line-notify-state');
 
-            ky.post<KyResponse>(
-              'https://script.google.com/macros/s/AKfycbyaLDA2hEhGAfyIU-67Txb5dKLUTa5nfozvi4iLhXJf/dev',
-              {
-                headers: { 'Content-Type': 'text/plain' },
-                json: { code: lineNotifyCode, userId: data.userId, type: 'line-notify' },
-              },
-            )
-              .json()
-              .then(({ data }) => {
-                if (data === 'success') {
-                  myBot.next();
-                }
-              })
-              .finally(() => {
-                location.href = LIFF_REDIRECT_URI;
-              });
-
             return myBot.message
               .add({ text: '系統正處理您的 LINE Notify 設定，請稍後...' })
+              .then(() => myBot.wait())
+              .then(() => {
+                ky.post(API_URL, {
+                  headers: { 'Content-Type': 'text/plain' },
+                  json: { code: lineNotifyCode, userId: data.userId, type: 'line-notify' },
+                })
+                  .json()
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  .then(({ data }: any) => {
+                    if (data === 'success') {
+                      myBot.next();
+                    }
+                  })
+                  .catch(() => false);
+              })
               .then(() => myBot.wait())
               .then(() =>
                 myBot.message.add({ text: ' LINE Notify 設定完成完畢頁面會自動重整，請稍後...' }),
               )
-              .then(() => myBot.wait());
+              .then(() => {
+                location.href = LIFF_REDIRECT_URI;
+              });
           }
 
           return Promise.resolve();
         })
         .then(() => myBot.message.add({ text: '此次使用哪個服務？' }))
-        .then(() =>
-          myBot.action.set(
+        .then(() => {
+          const options: { label: string; value: number }[] = [
+            { label: '新增洗滌記錄', value: 1 },
+            { label: '查看洗滌記錄', value: 2 },
+          ];
+
+          if (lineNotifyStatus === 'enabled') {
+            options.push({ label: '加入通知', value: 3 });
+          }
+
+          return myBot.action.set(
             {
-              options: [
-                { label: '新增洗滌記錄', value: 1 },
-                { label: '查看洗滌記錄', value: 2 },
-                { label: '加入通知', value: 3 },
-              ].filter((data: { label: string; value: number }) => {
-                if (data.value === 3 && lineNotifyStatus === 'enabled') {
-                  return false;
-                }
-                return true;
-              }),
+              options,
             },
             { actionType: 'selectButtons' },
-          ),
-        )
+          );
+        })
         .then((data: { selected: { value: number } }) => {
           switch (data.selected.value) {
             case 1:
-              return addRecords(myBot, userId);
+              // return addRecords(myBot, userId);
+              return addRecords(myBot, userId).then(() => myBot.wait({ waitTime: 100 }));
+
             case 2:
               window.open(RECORDS_PATH, '_blank');
 
-              return Promise.resolve();
+              return myBot.wait({ waitTime: 100 });
 
             case 3: {
               const state: string = crypto.randomUUID();
@@ -115,7 +119,6 @@ const App = () => {
             }
           }
         })
-        .then(() => myBot.wait({ waitTime: 3000 }))
         .then(() => myBot.message.add({ text: '是否要再新增使用記錄？' }))
         .then(() =>
           myBot.action.set(
