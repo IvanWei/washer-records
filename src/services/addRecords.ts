@@ -194,7 +194,11 @@ export default (myBot: BotuiInterface, userId: number) => {
           },
           { actionType: 'selectButtons' },
         )
-        .then(() => {
+        .then((data: { selected: { value: boolean } }) => {
+          if (!data.selected.value) {
+            return myBot.wait({ waitTime: 100 });
+          }
+
           const now = new Date();
           const thisDefaultValue = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
             2,
@@ -217,7 +221,7 @@ export default (myBot: BotuiInterface, userId: number) => {
         });
     })
     .then((data: { text: string; value: string }) => {
-      newLogging.useDate = new Date(data.value).toJSON();
+      newLogging.useDate = data ? new Date(data.value).toJSON() : '';
 
       ky.post(API_URL, {
         headers: { 'Content-Type': 'text/plain' },
