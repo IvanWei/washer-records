@@ -67,7 +67,9 @@ const App = () => {
                       myBot.next();
                     }
                   })
-                  .catch(() => false);
+                  .catch((e) => {
+                    throw e;
+                  });
               })
               .then(() => myBot.wait())
               .then(() =>
@@ -87,7 +89,7 @@ const App = () => {
             { label: '查看洗滌記錄', value: 2 },
           ];
 
-          if (lineNotifyStatus === 'enabled') {
+          if (lineNotifyStatus === 'disabled') {
             options.push({ label: '加入通知', value: 3 });
           }
 
