@@ -1,3 +1,7 @@
+.botui_app_container {
+  height: 70vh;
+}
+
 .botui_button {
   margin: 4px 2px;
 }
