@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "module": "ES2020",
+    "target": "es2019",
+    "experimentalDecorators": true,
+    "noEmit": true,
+    "strict": true,
+    "outDir": "dist"
+  },
+  "include": ["src/**.ts"]
+}
