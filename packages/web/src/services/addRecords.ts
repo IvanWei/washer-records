@@ -38,7 +38,9 @@ export default (myBot: BotuiInterface, userId: number) => {
           infos.whos = data.whos;
           myBot.next();
         })
-        .catch(() => false);
+        .catch((e) => {
+          throw e;
+        });
 
       return myBot.wait();
     })
@@ -92,7 +94,8 @@ export default (myBot: BotuiInterface, userId: number) => {
                   newLogging.helpWho = data.selected.value;
 
                   return myBot.wait({ waitTime: 100 });
-                });
+                })
+                .catch((error) => {throw error;});
             }
 
             return myBot.message
@@ -109,10 +112,6 @@ export default (myBot: BotuiInterface, userId: number) => {
                 ),
               )
               .then((data: { selected: { value: boolean } }) => {
-                if (!data.selected.value) {
-                  return myBot.wait({ waitTime: 100 });
-                }
-
                 return myBot.message.add({ text: '哪位家人幫忙？' }).then(() =>
                   myBot.action
                     .set(
@@ -128,10 +127,14 @@ export default (myBot: BotuiInterface, userId: number) => {
                       newLogging.helpWho = currentUser.value;
 
                       return myBot.wait({ waitTime: 100 });
-                    }),
-                );
-              });
-          });
+                    })
+                    .catch((error) => {throw error;}),
+                )
+                .catch((error) => {throw error;});
+              })
+              .catch((error) => {throw error;});
+          })
+          .catch((error) => {throw error;});
       }
 
       throw new Error('沒有使用權限，請和服務管理者聯繫');
@@ -218,7 +221,8 @@ export default (myBot: BotuiInterface, userId: number) => {
             },
             { actionType: 'input' },
           );
-        });
+        })
+        .catch((error) => {throw error;});
     })
     .then((data: { text: string; value: string }) => {
       newLogging.useDate = data ? new Date(data.value).toJSON() : '';
@@ -251,5 +255,8 @@ export default (myBot: BotuiInterface, userId: number) => {
         },
         { messageType: 'links' },
       );
+    })
+    .catch((e) => {
+      throw e;
     });
 };
