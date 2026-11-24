@@ -6,7 +6,7 @@ import type { INFOS_TYPES } from '../types/index.d';
 const API_URL: string = import.meta.env.VITE_API_URL;
 const RECORDS_PATH: string = import.meta.env.VITE_RECORDS_PATH;
 
-export default (myBot: BotuiInterface, userId: number) => {
+export default async (myBot: BotuiInterface, userId: number) => {
   const newLogging = {
     washer: '', // 洗衣機型號
     who: 0, // 使用者
@@ -26,6 +26,7 @@ export default (myBot: BotuiInterface, userId: number) => {
   return myBot.message
     .add({ text: '此次使用哪一臺洗衣機？' })
     .then(() => {
+      console.log('aa11::');
       ky.get(`${API_URL}?type=types`)
         .json()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,7 +39,7 @@ export default (myBot: BotuiInterface, userId: number) => {
           infos.whos = data.whos;
           myBot.next();
         })
-        .catch((e) => {
+        .catch((e: unknown) => {
           throw e;
         });
 
@@ -56,9 +57,11 @@ export default (myBot: BotuiInterface, userId: number) => {
       ),
     )
     .then((data: { selected: { value: string } }) => {
+      console.log('aaa:444::');
       newLogging.washer = data.selected.value;
 
       const currentUser = infos.whos.find((who) => who.value === userId);
+      console.log('aaa:444::111:: ', currentUser);
 
       if (currentUser) {
         newLogging.who = currentUser.value;
@@ -95,7 +98,9 @@ export default (myBot: BotuiInterface, userId: number) => {
 
                   return myBot.wait({ waitTime: 100 });
                 })
-                .catch((error) => {throw error;});
+                .catch((error: unknown) => {
+                  throw error;
+                });
             }
 
             return myBot.message
@@ -112,29 +117,43 @@ export default (myBot: BotuiInterface, userId: number) => {
                 ),
               )
               .then((data: { selected: { value: boolean } }) => {
-                return myBot.message.add({ text: '哪位家人幫忙？' }).then(() =>
-                  myBot.action
-                    .set(
-                      {
-                        options: infos.whos
-                          .filter((who) => who.value !== currentUser.value)
-                          .map((who) => ({ label: who.label, value: who.value })),
-                      },
-                      { actionType: 'selectButtons' },
-                    )
-                    .then((data: { selected: { value: number } }) => {
-                      newLogging.who = data.selected.value;
-                      newLogging.helpWho = currentUser.value;
+                console.log('data:: ', data.selected.value);
 
-                      return myBot.wait({ waitTime: 100 });
-                    })
-                    .catch((error) => {throw error;}),
-                )
-                .catch((error) => {throw error;});
+                if (data.selected.value) {
+                  return myBot.message
+                    .add({ text: '哪位家人幫忙？' })
+                    .then(() =>
+                      myBot.action
+                        .set(
+                          {
+                            options: infos.whos
+                              .filter((who) => who.value !== currentUser.value)
+                              .map((who) => ({ label: who.label, value: who.value })),
+                          },
+                          { actionType: 'selectButtons' },
+                        )
+                        .then((data: { selected: { value: number } }) => {
+                          newLogging.who = data.selected.value;
+                          newLogging.helpWho = currentUser.value;
+
+                          return myBot.wait({ waitTime: 100 });
+                        })
+                        .catch((error: unknown) => {
+                          throw error;
+                        }),
+                    )
+                    .catch((error: unknown) => {
+                      throw error;
+                    });
+                }
               })
-              .catch((error) => {throw error;});
+              .catch((error: unknown) => {
+                throw error;
+              });
           })
-          .catch((error) => {throw error;});
+          .catch((error: unknown) => {
+            throw error;
+          });
       }
 
       throw new Error('沒有使用權限，請和服務管理者聯繫');
@@ -203,13 +222,12 @@ export default (myBot: BotuiInterface, userId: number) => {
           }
 
           const now = new Date();
-          const thisDefaultValue = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+          const thisDefaultValue = `${String(now.getFullYear())}-${String(
+            now.getMonth() + 1,
+          ).padStart(2, '0')}-${String(now.getDate()).padStart(
             2,
             '0',
-          )}-${String(now.getDate()).padStart(
-            2,
-            '0',
-          )} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+          )} ${String(now.getHours())}:${String(now.getMinutes())}:${String(now.getSeconds())}`;
 
           return myBot.action.set(
             {
@@ -222,10 +240,13 @@ export default (myBot: BotuiInterface, userId: number) => {
             { actionType: 'input' },
           );
         })
-        .catch((error) => {throw error;});
+        .catch((error: unknown) => {
+          throw error;
+        });
     })
     .then((data: { text: string; value: string }) => {
-      newLogging.useDate = data ? new Date(data.value).toJSON() : '';
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      newLogging.useDate = !!data && !!data.value ? new Date(data.value).toJSON() : '';
 
       ky.post(API_URL, {
         headers: { 'Content-Type': 'text/plain' },
@@ -235,7 +256,7 @@ export default (myBot: BotuiInterface, userId: number) => {
         .then(() => {
           myBot.next();
         })
-        .catch((e) => {
+        .catch((e: unknown) => {
           throw e;
         });
 
@@ -256,7 +277,7 @@ export default (myBot: BotuiInterface, userId: number) => {
         { messageType: 'links' },
       );
     })
-    .catch((e) => {
+    .catch((e: unknown) => {
       throw e;
     });
 };

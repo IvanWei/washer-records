@@ -8,14 +8,14 @@ import './stylesheets/botui.css';
 liff
   .init({ liffId: import.meta.env.VITE_LIFF_ID || '' })
   .then(() => {
-    const root: Root = createRoot(document.getElementById('root') as HTMLElement);
+    const root: Root = createRoot(document.getElementById('root') as Element);
     root.render(
       // <React.StrictMode>
       <App />,
       // </React.StrictMode>,
     );
   })
-  .catch((error) => {
+  .catch((error: unknown) => {
     if (error instanceof Error) {
       alert(`LIFF error: ${error.message}`);
     }
