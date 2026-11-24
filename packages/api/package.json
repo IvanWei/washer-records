@@ -1,0 +1,33 @@
+{
+  "name": "washer-records",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "login": "clasp login",
+    "logout": "clasp logout",
+    "lint": "eslint \"./src/**/*.ts\" --fix && tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ivanwei/washer-records.git"
+  },
+  "author": "Wei Hong-Lin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ivanwei/washer-records/issues"
+  },
+  "homepage": "https://github.com/ivanwei/washer-records#readme",
+  "dependencies": {
+    "@google/clasp": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.65",
+    "@typescript-eslint/eslint-plugin": "^6.2.0",
+    "@typescript-eslint/parser": "^6.2.0",
+    "eslint": "^8.46.0",
+    "eslint-config-prettier": "^8.9.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "typescript": "^5.1.6"
+  }
+}
